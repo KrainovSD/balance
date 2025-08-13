@@ -1,0 +1,11 @@
+version: "3.8"
+services:
+  oidc:
+    container_name: finances
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 3010:3010
+    volumes:
+      - ./:/app
