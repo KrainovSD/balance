@@ -8,9 +8,8 @@ func InitDb(db *sql.DB) error {
 	var err error
 
 	if _, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS finances.users (
+	CREATE TABLE IF NOT EXISTS balance.users (
 		id SERIAL PRIMARY KEY,
-		oauth_id VARCHAR NOT NULL,
 		name VARCHAR NOT NULL,
 		username VARCHAR NOT NULL,
 		email VARCHAR,
@@ -21,10 +20,19 @@ func InitDb(db *sql.DB) error {
 	}
 
 	if _, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS finances.user_sessions (
+	CREATE TABLE IF NOT EXISTS balance.user_sessions (
 		id VARCHAR PRIMARY KEY,
-		user_id INT REFERENCES finances.users(id),
+		user_id INT REFERENCES balance.users(id),
 		expires_at TIMESTAMPTZ NOT NULL
+	)
+	`); err != nil {
+		return err
+	}
+
+	if _, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS balance.user_providers (
+		id VARCHAR PRIMARY KEY,
+		user_id INT REFERENCES balance.users(id)
 	)
 	`); err != nil {
 		return err

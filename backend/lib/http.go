@@ -57,10 +57,16 @@ func SendError(w http.ResponseWriter, err ErrorResponse) {
 	var code int
 	var status int
 
-	if err.Status == 0 {
+	status = err.Status
+	if status == 0 {
 		status = 500
 	}
-	message = err.Message + ": " + err.Error.Error()
+
+	if err.Message != "" {
+		message = err.Message + ": " + err.Error.Error()
+	} else {
+		message = err.Error.Error()
+	}
 
 	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
