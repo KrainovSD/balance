@@ -224,6 +224,7 @@ func InitGitlabOauth(oauth Oauth) error {
 				})
 				return
 			}
+			usersProvider.UpdateLastLogin(userId)
 
 			http.SetCookie(w, &http.Cookie{
 				Name:     oauth.CookieNameToken,

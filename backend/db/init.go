@@ -13,6 +13,7 @@ func InitDb(db *sql.DB) error {
 		name VARCHAR NOT NULL,
 		username VARCHAR NOT NULL,
 		email VARCHAR,
+		last_login TIMESTAMPTZ DEFAULT NOW(),
 		register_date TIMESTAMPTZ DEFAULT NOW()
 	)
 		`); err != nil {

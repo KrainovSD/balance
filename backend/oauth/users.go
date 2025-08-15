@@ -15,6 +15,7 @@ type IUsersProvider interface {
 	CreateProvider(userID int, provider string) error
 	CreateUser(user User, provider string) (int, error)
 	CreateSession(userID int, length int, expires time.Duration) (string, error)
+	UpdateLastLogin(userID int) error
 }
 
 func (u *UsersProvider) GetUserIdByProvider(provider string) (int, error) {
@@ -22,6 +23,12 @@ func (u *UsersProvider) GetUserIdByProvider(provider string) (int, error) {
 	err := u.Db.QueryRow(`SELECT user_id from balance.user_providers WHERE id = $1`, provider).Scan(&userID)
 
 	return userID, err
+}
+
+func (u *UsersProvider) UpdateLastLogin(userID int) error {
+	_, err := u.Db.Exec("UPDATE balance.users SET last_login = $1 WHERE id = $2", time.Now(), userID)
+
+	return err
 }
 
 func (u *UsersProvider) CreateProvider(userID int, provider string) error {

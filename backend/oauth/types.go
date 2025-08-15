@@ -5,7 +5,8 @@ type User struct {
 	Name         string `json:"name"`
 	Username     string `json:"username"`
 	Email        string `json:"email"`
-	RegisterDate int    `json:"registerDate"`
+	LastLogin    string `json:"lastLogin"`
+	RegisterDate string `json:"registerDate"`
 }
 
 type UserSession struct {
