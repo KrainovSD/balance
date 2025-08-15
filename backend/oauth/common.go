@@ -3,6 +3,7 @@ package oauth
 import (
 	"database/sql"
 	"errors"
+	"finances/api"
 	"finances/lib"
 	"fmt"
 	"net/http"
@@ -20,7 +21,7 @@ type RedisClient interface {
 type Oauth struct {
 	M                     *http.ServeMux
 	Redis                 RedisClient
-	ApiClient             *lib.ApiClient
+	ApiClient             *api.ApiClient
 	Db                    *sql.DB
 	AuthPath              string
 	CallbackPath          string

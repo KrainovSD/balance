@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"database/sql"
 	"encoding/json"
+	"finances/api"
 	"finances/lib"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
@@ -120,7 +120,7 @@ func InitGoogleOauth(oauth Oauth) error {
 			}
 
 			/** Get Token */
-			var response lib.Response
+			var response api.Response
 			var accessToken GoogleTokenResponse
 			formData := url.Values{}
 			formData.Set("grant_type", "authorization_code")
@@ -129,10 +129,10 @@ func InitGoogleOauth(oauth Oauth) error {
 			formData.Set("code", callbackServiceData.Code)
 			formData.Set("redirect_uri", callbackServiceData.CallbackUrl)
 
-			if response, err = oauth.ApiClient.Send(lib.Request{
+			if response, err = oauth.ApiClient.Send(api.Request{
 				Url:         env.TokenUrl,
-				Method:      lib.Methods.POST,
-				ContentType: lib.ContentTypes.Form,
+				Method:      api.Methods.POST,
+				ContentType: api.ContentTypes.Form,
 				Body:        bytes.NewBufferString(formData.Encode()),
 			}); err != nil {
 				lib.SendError(w, lib.ErrorResponse{
@@ -150,15 +150,13 @@ func InitGoogleOauth(oauth Oauth) error {
 				return
 			}
 
-			fmt.Println(string(response.Data))
-
 			/** Get User */
 			var user GoogleUserResponse
 
-			if response, err = oauth.ApiClient.Send(lib.Request{
+			if response, err = oauth.ApiClient.Send(api.Request{
 				Url:         env.UserUrl,
-				Method:      lib.Methods.GET,
-				ContentType: lib.ContentTypes.JSON,
+				Method:      api.Methods.GET,
+				ContentType: api.ContentTypes.JSON,
 				Headers:     map[string]string{"Authorization": "Bearer " + accessToken.AccessToken},
 			}); err != nil {
 				lib.SendError(w, lib.ErrorResponse{
@@ -167,8 +165,6 @@ func InitGoogleOauth(oauth Oauth) error {
 				})
 				return
 			}
-
-			fmt.Println(string(response.Data))
 
 			if err = json.Unmarshal(response.Data, &user); err != nil {
 				lib.SendError(w, lib.ErrorResponse{
@@ -184,6 +180,11 @@ func InitGoogleOauth(oauth Oauth) error {
 			oauthId := "google:" + user.ID
 
 			if ownerId, err = GetUserId(r); err == nil {
+				if _, err = usersProvider.GetUserIdByProvider(oauthId); err == nil {
+					http.Redirect(w, r, callbackServiceData.ComebackUrl, http.StatusTemporaryRedirect)
+					return
+				}
+
 				if err = usersProvider.CreateProvider(ownerId, oauthId); err != nil {
 					lib.SendError(w, lib.ErrorResponse{
 						Message: "add new provider",

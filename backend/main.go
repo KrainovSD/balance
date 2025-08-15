@@ -3,10 +3,12 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"finances/api"
 	"finances/db"
 	"finances/lib"
 	"finances/oauth"
 	"finances/plugins"
+	"finances/routes"
 	"fmt"
 	"net/http"
 	"os"
@@ -18,19 +20,18 @@ var m http.ServeMux
 func main() {
 	var err error
 	var redis *plugins.RedisClient
-	var apiClient *lib.ApiClient
+	var apiClient *api.ApiClient
 	var pg *sql.DB
 
 	if err = lib.LoadEnvFile(".env"); err != nil {
 		panic(err.Error())
 	}
-	var cookieNameToken = os.Getenv("AUTH_COOKIE")
 	if redis, err = plugins.CreateRedisClient(plugins.RedisClientOptions{
 		Timeout: 5 * time.Second,
 	}); err != nil {
 		panic(err.Error())
 	}
-	if apiClient, err = lib.CreateApiClient(); err != nil {
+	if apiClient, err = api.CreateApiClient(); err != nil {
 		panic(err.Error())
 	}
 	if pg, err = plugins.CreatePgClient(); err != nil {
@@ -43,43 +44,13 @@ func main() {
 
 	}
 
-	if err = oauth.InitGitlabOauth(oauth.Oauth{
-		M:                     &m,
-		Redis:                 redis,
-		Db:                    pg,
-		ApiClient:             apiClient,
-		AuthPath:              "/api/v1/oauth/gitlab",
-		CallbackPath:          "/api/v1/oauth/gitlab/callback",
-		ServiceDataExpires:    5 * time.Minute,
-		SessionTokenExpires:   24 * time.Hour * 1,
-		StateLength:           16,
-		CookieNameCallbackUrl: "balance.callback",
-		CookieNameComebackUrl: "balance.comeback",
-		CookieNameTimeKey:     "balance.key",
-		CookieNameToken:       cookieNameToken,
-		PrefixEnv:             "GITLAB",
-		Scopes:                []string{"openid", "profile", "read_user", "email"},
-	}); err != nil {
-		panic(err.Error())
-	}
-
-	if err = oauth.InitGoogleOauth(oauth.Oauth{
-		M:                     &m,
-		Redis:                 redis,
-		Db:                    pg,
-		ApiClient:             apiClient,
-		AuthPath:              "/api/v1/oauth/google",
-		CallbackPath:          "/api/v1/oauth/google/callback",
-		ServiceDataExpires:    5 * time.Minute,
-		SessionTokenExpires:   24 * time.Hour * 1,
-		StateLength:           16,
-		CookieNameCallbackUrl: "balance.callback",
-		CookieNameComebackUrl: "balance.comeback",
-		CookieNameTimeKey:     "balance.key",
-		CookieNameToken:       cookieNameToken,
-		PrefixEnv:             "GOOGLE",
-		Scopes:                []string{"openid", "profile", "email"},
-	}); err != nil {
+	authRouter := routes.CreateAuthRouter(routes.Auth{
+		Mux:       &m,
+		Redis:     redis,
+		Db:        pg,
+		ApiClient: apiClient,
+	})
+	if err = authRouter.Init(); err != nil {
 		panic(err.Error())
 	}
 
@@ -105,6 +76,7 @@ func main() {
 	}
 
 	var port = os.Getenv("PORT")
+	var cookieNameToken = os.Getenv("AUTH_COOKIE")
 	m.Handle("/test", oauth.AuthMiddleware(pg, cookieNameToken, false)(http.HandlerFunc(testHandle)))
 
 	fmt.Println("Starting Server on " + port)

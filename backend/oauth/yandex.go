@@ -6,29 +6,27 @@ import (
 	"encoding/json"
 	"finances/api"
 	"finances/lib"
+	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 	"strings"
 	"time"
 )
 
-type GitlabTokenResponse struct {
+type YandexTokenResponse struct {
 	AccessToken string `json:"access_token"`
 }
-type GitlabUserResponse struct {
-	ID       int    `json:"id"`
-	UserName string `json:"username"`
-	Name     string `json:"name"`
-	Email    string `json:"email"`
+
+type YandexUserResponse struct {
+	ID       string `json:"id"`
+	Name     string `json:"real_name"`
+	Email    string `json:"default_email"`
+	UserName string `json:"last_name"`
 }
 
-func InitGitlabOauth(oauth Oauth) error {
+func InitYandexOauth(oauth Oauth) error {
 	var env OauthEnv
 	var err error
-	usersProvider := UsersProvider{
-		Db: oauth.Db,
-	}
 
 	if err = oauth.Validate(); err != nil {
 		return err
@@ -42,13 +40,17 @@ func InitGitlabOauth(oauth Oauth) error {
 	if oauth.AuthPath != "" {
 		authPath = oauth.AuthPath
 	} else {
-		authPath = "/api/v1/oauth/gitlab"
+		authPath = "/api/v1/oauth/yandex"
 	}
 	var callbackPath string
 	if oauth.CallbackPath != "" {
 		callbackPath = oauth.CallbackPath
 	} else {
-		callbackPath = "/api/v1/oauth/gitlab/callback"
+		callbackPath = "/api/v1/oauth/yandex/callback"
+	}
+
+	usersProvider := UsersProvider{
+		Db: oauth.Db,
 	}
 
 	authHandle := func(w http.ResponseWriter, r *http.Request) {
@@ -119,7 +121,7 @@ func InitGitlabOauth(oauth Oauth) error {
 
 			/** Get Token */
 			var response api.Response
-			var accessToken GitlabTokenResponse
+			var accessToken YandexTokenResponse
 			formData := url.Values{}
 			formData.Set("grant_type", "authorization_code")
 			formData.Set("client_id", env.ClientId)
@@ -148,8 +150,10 @@ func InitGitlabOauth(oauth Oauth) error {
 				return
 			}
 
+			fmt.Println(string(response.Data))
+
 			/** Get User */
-			var user GitlabUserResponse
+			var user YandexUserResponse
 
 			if response, err = oauth.ApiClient.Send(api.Request{
 				Url:         env.UserUrl,
@@ -164,6 +168,8 @@ func InitGitlabOauth(oauth Oauth) error {
 				return
 			}
 
+			fmt.Println(string(response.Data))
+
 			if err = json.Unmarshal(response.Data, &user); err != nil {
 				lib.SendError(w, lib.ErrorResponse{
 					Message: "parse user",
@@ -175,7 +181,7 @@ func InitGitlabOauth(oauth Oauth) error {
 			/** Check User In DB */
 			var ownerId int
 			var userId int
-			oauthId := "gitlab:" + strconv.Itoa(user.ID)
+			oauthId := "yandex:" + user.ID
 
 			if ownerId, err = GetUserId(r); err == nil {
 				if _, err = usersProvider.GetUserIdByProvider(oauthId); err == nil {
