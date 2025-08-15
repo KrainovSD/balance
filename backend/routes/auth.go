@@ -90,5 +90,25 @@ func (a *Auth) Init() error {
 		return err
 	}
 
+	if err = oauth.InitGithubOauth(oauth.Oauth{
+		M:                     a.Mux,
+		Redis:                 a.Redis,
+		Db:                    a.Db,
+		ApiClient:             a.ApiClient,
+		AuthPath:              "/api/v1/oauth/github",
+		CallbackPath:          "/api/v1/oauth/github/callback",
+		ServiceDataExpires:    5 * time.Minute,
+		SessionTokenExpires:   24 * time.Hour * 1,
+		StateLength:           16,
+		CookieNameCallbackUrl: "balance.callback",
+		CookieNameComebackUrl: "balance.comeback",
+		CookieNameTimeKey:     "balance.key",
+		CookieNameToken:       cookieNameToken,
+		PrefixEnv:             "GITHUB",
+		Scopes:                []string{"user"},
+	}); err != nil {
+		return err
+	}
+
 	return err
 }

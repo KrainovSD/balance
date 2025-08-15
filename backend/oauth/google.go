@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"finances/api"
 	"finances/lib"
+	"finances/modules/users"
 	"net/http"
 	"net/url"
 	"strings"
@@ -49,7 +50,7 @@ func InitGoogleOauth(oauth Oauth) error {
 		callbackPath = "/api/v1/oauth/google/callback"
 	}
 
-	usersProvider := UsersProvider{
+	usersProvider := users.UsersProvider{
 		Db: oauth.Db,
 	}
 
@@ -101,7 +102,7 @@ func InitGoogleOauth(oauth Oauth) error {
 
 		http.Redirect(w, r, loginUrl.String(), http.StatusTemporaryRedirect)
 	}
-	callbackHandle := func(usersProvider IUsersProvider) func(w http.ResponseWriter, r *http.Request) {
+	callbackHandle := func(usersProvider users.IUsersProvider) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {
 			var proto = lib.GetProto(r)
 			var callbackServiceData CallbackServiceData
@@ -198,7 +199,7 @@ func InitGoogleOauth(oauth Oauth) error {
 
 			if userId, err = usersProvider.GetUserIdByProvider(oauthId); err != nil {
 				if err == sql.ErrNoRows {
-					if userId, err = usersProvider.CreateUser(User{
+					if userId, err = usersProvider.CreateUser(users.User{
 						Name:     user.Name,
 						Username: user.FamilyName,
 						Email:    user.Email,

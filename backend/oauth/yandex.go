@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"finances/api"
 	"finances/lib"
-	"fmt"
+	"finances/modules/users"
 	"net/http"
 	"net/url"
 	"strings"
@@ -49,7 +49,7 @@ func InitYandexOauth(oauth Oauth) error {
 		callbackPath = "/api/v1/oauth/yandex/callback"
 	}
 
-	usersProvider := UsersProvider{
+	usersProvider := users.UsersProvider{
 		Db: oauth.Db,
 	}
 
@@ -101,7 +101,7 @@ func InitYandexOauth(oauth Oauth) error {
 
 		http.Redirect(w, r, loginUrl.String(), http.StatusTemporaryRedirect)
 	}
-	callbackHandle := func(usersProvider IUsersProvider) func(w http.ResponseWriter, r *http.Request) {
+	callbackHandle := func(usersProvider users.IUsersProvider) func(w http.ResponseWriter, r *http.Request) {
 		return func(w http.ResponseWriter, r *http.Request) {
 			var proto = lib.GetProto(r)
 			var callbackServiceData CallbackServiceData
@@ -150,8 +150,6 @@ func InitYandexOauth(oauth Oauth) error {
 				return
 			}
 
-			fmt.Println(string(response.Data))
-
 			/** Get User */
 			var user YandexUserResponse
 
@@ -167,8 +165,6 @@ func InitYandexOauth(oauth Oauth) error {
 				})
 				return
 			}
-
-			fmt.Println(string(response.Data))
 
 			if err = json.Unmarshal(response.Data, &user); err != nil {
 				lib.SendError(w, lib.ErrorResponse{
@@ -202,7 +198,7 @@ func InitYandexOauth(oauth Oauth) error {
 
 			if userId, err = usersProvider.GetUserIdByProvider(oauthId); err != nil {
 				if err == sql.ErrNoRows {
-					if userId, err = usersProvider.CreateUser(User{
+					if userId, err = usersProvider.CreateUser(users.User{
 						Name:     user.Name,
 						Username: user.UserName,
 						Email:    user.Email,

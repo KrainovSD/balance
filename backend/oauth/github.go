@@ -7,6 +7,7 @@ import (
 	"finances/api"
 	"finances/lib"
 	"finances/modules/users"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -14,17 +15,17 @@ import (
 	"time"
 )
 
-type GitlabTokenResponse struct {
+type GithubTokenResponse struct {
 	AccessToken string `json:"access_token"`
 }
-type GitlabUserResponse struct {
+type GithubUserResponse struct {
 	ID       int    `json:"id"`
-	UserName string `json:"username"`
+	UserName string `json:"login"`
 	Name     string `json:"name"`
 	Email    string `json:"email"`
 }
 
-func InitGitlabOauth(oauth Oauth) error {
+func InitGithubOauth(oauth Oauth) error {
 	var env OauthEnv
 	var err error
 	usersProvider := users.UsersProvider{
@@ -43,13 +44,13 @@ func InitGitlabOauth(oauth Oauth) error {
 	if oauth.AuthPath != "" {
 		authPath = oauth.AuthPath
 	} else {
-		authPath = "/api/v1/oauth/gitlab"
+		authPath = "/api/v1/oauth/github"
 	}
 	var callbackPath string
 	if oauth.CallbackPath != "" {
 		callbackPath = oauth.CallbackPath
 	} else {
-		callbackPath = "/api/v1/oauth/gitlab/callback"
+		callbackPath = "/api/v1/oauth/github/callback"
 	}
 
 	authHandle := func(w http.ResponseWriter, r *http.Request) {
@@ -120,7 +121,7 @@ func InitGitlabOauth(oauth Oauth) error {
 
 			/** Get Token */
 			var response api.Response
-			var accessToken GitlabTokenResponse
+			var accessToken GithubTokenResponse
 			formData := url.Values{}
 			formData.Set("grant_type", "authorization_code")
 			formData.Set("client_id", env.ClientId)
@@ -133,6 +134,9 @@ func InitGitlabOauth(oauth Oauth) error {
 				Method:      api.Methods.POST,
 				ContentType: api.ContentTypes.Form,
 				Body:        bytes.NewBufferString(formData.Encode()),
+				Headers: map[string]string{
+					"Accept": string(api.ContentTypes.JSON),
+				},
 			}); err != nil {
 				lib.SendError(w, lib.ErrorResponse{
 					Message: "get token",
@@ -140,6 +144,8 @@ func InitGitlabOauth(oauth Oauth) error {
 				})
 				return
 			}
+
+			fmt.Println(string(response.Data))
 
 			if err = json.Unmarshal(response.Data, &accessToken); err != nil {
 				lib.SendError(w, lib.ErrorResponse{
@@ -150,7 +156,7 @@ func InitGitlabOauth(oauth Oauth) error {
 			}
 
 			/** Get User */
-			var user GitlabUserResponse
+			var user GithubUserResponse
 
 			if response, err = oauth.ApiClient.Send(api.Request{
 				Url:         env.UserUrl,
@@ -165,6 +171,8 @@ func InitGitlabOauth(oauth Oauth) error {
 				return
 			}
 
+			fmt.Println(string(response.Data))
+
 			if err = json.Unmarshal(response.Data, &user); err != nil {
 				lib.SendError(w, lib.ErrorResponse{
 					Message: "parse user",
@@ -176,7 +184,7 @@ func InitGitlabOauth(oauth Oauth) error {
 			/** Check User In DB */
 			var ownerId int
 			var userId int
-			oauthId := "gitlab:" + strconv.Itoa(user.ID)
+			oauthId := "github:" + strconv.Itoa(user.ID)
 
 			if ownerId, err = GetUserId(r); err == nil {
 				if _, err = usersProvider.GetUserIdByProvider(oauthId); err == nil {
