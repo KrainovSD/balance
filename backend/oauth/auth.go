@@ -28,7 +28,7 @@ func AuthMiddleware(db *sql.DB, cookieName string, strict bool) func(http.Handle
 			if token == "" {
 				if cookie, err = r.Cookie(cookieName); err != nil {
 					if strict {
-						goto FATAL
+						goto NOT_AUTHORIZED
 					} else {
 						goto EXIT
 					}

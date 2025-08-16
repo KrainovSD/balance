@@ -5,6 +5,7 @@ import (
 	"finances/api"
 	"finances/modules/payments"
 	"finances/modules/receipts"
+	"finances/modules/users"
 	"finances/oauth"
 	"finances/plugins"
 	"net/http"
@@ -25,6 +26,7 @@ func (r *Router) Init() error {
 	if err = oauth.InitGitlabOauth(oauth.Oauth{
 		M:                     r.Mux,
 		Redis:                 r.Redis,
+		UsersProvider:         &users.UsersProvider{Db: r.Db},
 		Db:                    r.Db,
 		ApiClient:             r.ApiClient,
 		AuthPath:              "/api/v1/oauth/gitlab",
@@ -46,6 +48,7 @@ func (r *Router) Init() error {
 	if err = oauth.InitGoogleOauth(oauth.Oauth{
 		M:                     r.Mux,
 		Redis:                 r.Redis,
+		UsersProvider:         &users.UsersProvider{Db: r.Db},
 		Db:                    r.Db,
 		ApiClient:             r.ApiClient,
 		AuthPath:              "/api/v1/oauth/google",
@@ -67,6 +70,7 @@ func (r *Router) Init() error {
 	if err = oauth.InitYandexOauth(oauth.Oauth{
 		M:                     r.Mux,
 		Redis:                 r.Redis,
+		UsersProvider:         &users.UsersProvider{Db: r.Db},
 		Db:                    r.Db,
 		ApiClient:             r.ApiClient,
 		AuthPath:              "/api/v1/oauth/yandex",
@@ -87,6 +91,7 @@ func (r *Router) Init() error {
 	if err = oauth.InitGithubOauth(oauth.Oauth{
 		M:                     r.Mux,
 		Redis:                 r.Redis,
+		UsersProvider:         &users.UsersProvider{Db: r.Db},
 		Db:                    r.Db,
 		ApiClient:             r.ApiClient,
 		AuthPath:              "/api/v1/oauth/github",
@@ -122,6 +127,15 @@ func (r *Router) Init() error {
 		CookieNameToken: r.cookieNameToken,
 	}
 	payments.Init(r.Mux)
+	users := users.UsersController{
+		UsersService: users.UsersService{
+			UsersProvider: users.UsersProvider{
+				Db: r.Db,
+			},
+		},
+		CookieNameToken: r.cookieNameToken,
+	}
+	users.Init(r.Mux)
 
 	return err
 }

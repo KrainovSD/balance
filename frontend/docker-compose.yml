@@ -1,0 +1,10 @@
+version: "3.6"
+services:
+  balance-frontend:
+     container_name: balance-frontend
+     build:
+      context: .
+      dockerfile: Dockerfile
+     restart: unless-stopped
+     ports:
+      - "3050:80"

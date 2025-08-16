@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"finances/api"
 	"finances/lib"
-	"finances/modules/users"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -27,9 +26,6 @@ type GitlabUserResponse struct {
 func InitGitlabOauth(oauth Oauth) error {
 	var env OauthEnv
 	var err error
-	usersProvider := users.UsersProvider{
-		Db: oauth.Db,
-	}
 
 	if err = oauth.Validate(); err != nil {
 		return err
@@ -100,147 +96,141 @@ func InitGitlabOauth(oauth Oauth) error {
 
 		http.Redirect(w, r, loginUrl.String(), http.StatusTemporaryRedirect)
 	}
-	callbackHandle := func(usersProvider users.IUsersProvider) func(w http.ResponseWriter, r *http.Request) {
-		return func(w http.ResponseWriter, r *http.Request) {
-			var proto = lib.GetProto(r)
-			var callbackServiceData CallbackServiceData
-			var err error
-			oauth.SetServiceCookie(w, OauthCookie{
-				Clear:  true,
-				Secure: proto == "https",
+	callbackHandle := func(w http.ResponseWriter, r *http.Request) {
+		var proto = lib.GetProto(r)
+		var callbackServiceData CallbackServiceData
+		var err error
+		oauth.SetServiceCookie(w, OauthCookie{
+			Clear:  true,
+			Secure: proto == "https",
+		})
+
+		if callbackServiceData, err = oauth.GetCallbackServiceData(r); err != nil {
+			lib.SendError(w, lib.ErrorResponse{
+				Message: "get service data",
+				Error:   err,
 			})
+			return
+		}
 
-			if callbackServiceData, err = oauth.GetCallbackServiceData(r); err != nil {
-				lib.SendError(w, lib.ErrorResponse{
-					Message: "get service data",
-					Error:   err,
-				})
-				return
-			}
+		/** Get Token */
+		var response api.Response
+		var accessToken GitlabTokenResponse
+		formData := url.Values{}
+		formData.Set("grant_type", "authorization_code")
+		formData.Set("client_id", env.ClientId)
+		formData.Set("client_secret", env.ClientSecret)
+		formData.Set("code", callbackServiceData.Code)
+		formData.Set("redirect_uri", callbackServiceData.CallbackUrl)
 
-			/** Get Token */
-			var response api.Response
-			var accessToken GitlabTokenResponse
-			formData := url.Values{}
-			formData.Set("grant_type", "authorization_code")
-			formData.Set("client_id", env.ClientId)
-			formData.Set("client_secret", env.ClientSecret)
-			formData.Set("code", callbackServiceData.Code)
-			formData.Set("redirect_uri", callbackServiceData.CallbackUrl)
+		if response, err = oauth.ApiClient.Send(api.Request{
+			Url:         env.TokenUrl,
+			Method:      api.Methods.POST,
+			ContentType: api.ContentTypes.Form,
+			Body:        bytes.NewBufferString(formData.Encode()),
+		}); err != nil {
+			lib.SendError(w, lib.ErrorResponse{
+				Message: "get token",
+				Error:   err,
+			})
+			return
+		}
 
-			if response, err = oauth.ApiClient.Send(api.Request{
-				Url:         env.TokenUrl,
-				Method:      api.Methods.POST,
-				ContentType: api.ContentTypes.Form,
-				Body:        bytes.NewBufferString(formData.Encode()),
-			}); err != nil {
-				lib.SendError(w, lib.ErrorResponse{
-					Message: "get token",
-					Error:   err,
-				})
-				return
-			}
+		if err = json.Unmarshal(response.Data, &accessToken); err != nil {
+			lib.SendError(w, lib.ErrorResponse{
+				Message: "parse token",
+				Error:   err,
+			})
+			return
+		}
 
-			if err = json.Unmarshal(response.Data, &accessToken); err != nil {
-				lib.SendError(w, lib.ErrorResponse{
-					Message: "parse token",
-					Error:   err,
-				})
-				return
-			}
+		/** Get User */
+		var user GitlabUserResponse
 
-			/** Get User */
-			var user GitlabUserResponse
+		if response, err = oauth.ApiClient.Send(api.Request{
+			Url:         env.UserUrl,
+			Method:      api.Methods.GET,
+			ContentType: api.ContentTypes.JSON,
+			Headers:     map[string]string{"Authorization": "Bearer " + accessToken.AccessToken},
+		}); err != nil {
+			lib.SendError(w, lib.ErrorResponse{
+				Message: "get user",
+				Error:   err,
+			})
+			return
+		}
 
-			if response, err = oauth.ApiClient.Send(api.Request{
-				Url:         env.UserUrl,
-				Method:      api.Methods.GET,
-				ContentType: api.ContentTypes.JSON,
-				Headers:     map[string]string{"Authorization": "Bearer " + accessToken.AccessToken},
-			}); err != nil {
-				lib.SendError(w, lib.ErrorResponse{
-					Message: "get user",
-					Error:   err,
-				})
-				return
-			}
+		if err = json.Unmarshal(response.Data, &user); err != nil {
+			lib.SendError(w, lib.ErrorResponse{
+				Message: "parse user",
+				Error:   err,
+			})
+			return
+		}
 
-			if err = json.Unmarshal(response.Data, &user); err != nil {
-				lib.SendError(w, lib.ErrorResponse{
-					Message: "parse user",
-					Error:   err,
-				})
-				return
-			}
+		/** Check User In DB */
+		var ownerId int
+		var userId int
+		oauthId := "gitlab:" + strconv.Itoa(user.ID)
 
-			/** Check User In DB */
-			var ownerId int
-			var userId int
-			oauthId := "gitlab:" + strconv.Itoa(user.ID)
-
-			if ownerId, err = GetUserId(r); err == nil {
-				if _, err = usersProvider.GetUserIdByProvider(oauthId); err == nil {
-					http.Redirect(w, r, callbackServiceData.ComebackUrl, http.StatusTemporaryRedirect)
-					return
-				}
-
-				if err = usersProvider.CreateProvider(ownerId, oauthId); err != nil {
-					lib.SendError(w, lib.ErrorResponse{
-						Message: "add new provider",
-						Error:   err,
-					})
-					return
-				}
+		if ownerId, err = GetUserId(r); err == nil {
+			if _, err = oauth.UsersProvider.GetUserIdByProvider(oauthId); err == nil {
 				http.Redirect(w, r, callbackServiceData.ComebackUrl, http.StatusTemporaryRedirect)
 				return
 			}
 
-			if userId, err = usersProvider.GetUserIdByProvider(oauthId); err != nil {
-				if err == sql.ErrNoRows {
-					if userId, err = usersProvider.CreateUser(users.User{
-						Name:     user.Name,
-						Username: user.UserName,
-						Email:    user.Email,
-					}, oauthId); err != nil {
-						lib.SendError(w, lib.ErrorResponse{
-							Message: "create user",
-							Error:   err,
-						})
-						return
-					}
-				} else {
+			if err = oauth.UsersProvider.CreateProvider(ownerId, oauthId); err != nil {
+				lib.SendError(w, lib.ErrorResponse{
+					Message: "add new provider",
+					Error:   err,
+				})
+				return
+			}
+			http.Redirect(w, r, callbackServiceData.ComebackUrl, http.StatusTemporaryRedirect)
+			return
+		}
+
+		if userId, err = oauth.UsersProvider.GetUserIdByProvider(oauthId); err != nil {
+			if err == sql.ErrNoRows {
+				if userId, err = oauth.UsersProvider.CreateUser(user.Name, user.UserName, user.Email, oauthId); err != nil {
 					lib.SendError(w, lib.ErrorResponse{
-						Message: "get user from db",
+						Message: "create user",
 						Error:   err,
 					})
 					return
 				}
-			}
-
-			/** Generate and Set session token */
-			var sessionToken string
-			if sessionToken, err = usersProvider.CreateSession(userId, oauth.StateLength, oauth.SessionTokenExpires); err != nil {
+			} else {
 				lib.SendError(w, lib.ErrorResponse{
-					Error: err,
+					Message: "get user from db",
+					Error:   err,
 				})
 				return
 			}
-			usersProvider.UpdateLastLogin(userId)
-
-			http.SetCookie(w, &http.Cookie{
-				Name:     oauth.CookieNameToken,
-				Value:    sessionToken,
-				Path:     "/",
-				Expires:  time.Now().Add(oauth.SessionTokenExpires),
-				HttpOnly: true,
-				Secure:   proto == "https",
-			})
-			http.Redirect(w, r, callbackServiceData.ComebackUrl, http.StatusTemporaryRedirect)
 		}
+
+		/** Generate and Set session token */
+		var sessionToken string
+		if sessionToken, err = oauth.UsersProvider.CreateSession(userId, oauth.StateLength, oauth.SessionTokenExpires); err != nil {
+			lib.SendError(w, lib.ErrorResponse{
+				Error: err,
+			})
+			return
+		}
+		oauth.UsersProvider.UpdateLastLogin(userId)
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     oauth.CookieNameToken,
+			Value:    sessionToken,
+			Path:     "/",
+			Expires:  time.Now().Add(oauth.SessionTokenExpires),
+			HttpOnly: true,
+			Secure:   proto == "https",
+		})
+		http.Redirect(w, r, callbackServiceData.ComebackUrl, http.StatusTemporaryRedirect)
 	}
 
 	oauth.M.HandleFunc(authPath, authHandle)
-	oauth.M.Handle(callbackPath, AuthMiddleware(oauth.Db, oauth.CookieNameToken, false)(http.HandlerFunc(callbackHandle(&usersProvider))))
+	oauth.M.Handle(callbackPath, AuthMiddleware(oauth.Db, oauth.CookieNameToken, false)(http.HandlerFunc(callbackHandle)))
 
 	return nil
 }

@@ -1,0 +1,9 @@
+/dist
+/node_modules
+/tmp
+/coverage
+/lib
+.vscode
+.npmrc
+/storybook-static
+/stats

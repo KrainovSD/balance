@@ -17,11 +17,20 @@ type RedisClient interface {
 	Del(key ...string) error
 }
 
+type UserProvider interface {
+	CreateProvider(userID int, provider string) error
+	CreateSession(userID int, length int, expires time.Duration) (string, error)
+	CreateUser(name string, username string, email string, provider string) (int, error)
+	GetUserIdByProvider(provider string) (int, error)
+	UpdateLastLogin(userID int) error
+}
+
 type Oauth struct {
 	M                     *http.ServeMux
 	Redis                 RedisClient
 	ApiClient             *api.ApiClient
 	Db                    *sql.DB
+	UsersProvider         UserProvider
 	AuthPath              string
 	CallbackPath          string
 	ServiceDataExpires    time.Duration

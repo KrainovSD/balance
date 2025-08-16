@@ -18,6 +18,17 @@ type IUsersProvider interface {
 	UpdateLastLogin(userID int) error
 }
 
+func (u *UsersProvider) GetUserById(userID int) (User, error) {
+	var user User
+	err := u.Db.QueryRow(`
+	SELECT id, name, username, email, last_login, register_date  
+	FROM balance.users 
+	WHERE id = $1`,
+		userID).Scan(&user.ID, &user.Name, &user.Username, &user.Email, &user.LastLogin, &user.RegisterDate)
+
+	return user, err
+}
+
 func (u *UsersProvider) GetUserIdByProvider(provider string) (int, error) {
 	var userID int
 	err := u.Db.QueryRow(`SELECT user_id from balance.user_providers WHERE id = $1`, provider).Scan(&userID)
@@ -37,7 +48,7 @@ func (u *UsersProvider) CreateProvider(userID int, provider string) error {
 	return err
 }
 
-func (u *UsersProvider) CreateUser(user User, provider string) (int, error) {
+func (u *UsersProvider) CreateUser(name string, username string, email string, provider string) (int, error) {
 	var userID int
 	var err error
 	var tx *sql.Tx
@@ -54,7 +65,7 @@ func (u *UsersProvider) CreateUser(user User, provider string) (int, error) {
 		err = tx.Commit()
 	}()
 
-	if err = tx.QueryRow(`INSERT INTO balance.users (name, username, email) VALUES ($1, $2, $3) returning id`, user.Name, user.Username, user.Email).Scan(&userID); err != nil {
+	if err = tx.QueryRow(`INSERT INTO balance.users (name, username, email) VALUES ($1, $2, $3) returning id`, name, username, email).Scan(&userID); err != nil {
 		return userID, err
 	}
 	_, err = tx.Exec(`INSERT INTO balance.user_providers (id, user_id) VALUES ($1, $2)`, provider, userID)
