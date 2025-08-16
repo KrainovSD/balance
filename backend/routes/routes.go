@@ -17,7 +17,7 @@ type Router struct {
 	Redis           *plugins.RedisClient
 	Db              *sql.DB
 	ApiClient       *api.ApiClient
-	cookieNameToken string
+	CookieNameToken string
 }
 
 func (r *Router) Init() error {
@@ -37,7 +37,7 @@ func (r *Router) Init() error {
 		CookieNameCallbackUrl: "balance.callback",
 		CookieNameComebackUrl: "balance.comeback",
 		CookieNameTimeKey:     "balance.key",
-		CookieNameToken:       r.cookieNameToken,
+		CookieNameToken:       r.CookieNameToken,
 		PrefixEnv:             "GITLAB",
 		Scopes:                []string{"openid", "profile", "read_user", "email"},
 	}); err != nil {
@@ -59,7 +59,7 @@ func (r *Router) Init() error {
 		CookieNameCallbackUrl: "balance.callback",
 		CookieNameComebackUrl: "balance.comeback",
 		CookieNameTimeKey:     "balance.key",
-		CookieNameToken:       r.cookieNameToken,
+		CookieNameToken:       r.CookieNameToken,
 		PrefixEnv:             "GOOGLE",
 		Scopes:                []string{"openid", "profile", "email"},
 	}); err != nil {
@@ -81,7 +81,7 @@ func (r *Router) Init() error {
 		CookieNameCallbackUrl: "balance.callback",
 		CookieNameComebackUrl: "balance.comeback",
 		CookieNameTimeKey:     "balance.key",
-		CookieNameToken:       r.cookieNameToken,
+		CookieNameToken:       r.CookieNameToken,
 		PrefixEnv:             "YANDEX",
 		Scopes:                []string{"login:email", "login:info"},
 	}); err != nil {
@@ -102,7 +102,7 @@ func (r *Router) Init() error {
 		CookieNameCallbackUrl: "balance.callback",
 		CookieNameComebackUrl: "balance.comeback",
 		CookieNameTimeKey:     "balance.key",
-		CookieNameToken:       r.cookieNameToken,
+		CookieNameToken:       r.CookieNameToken,
 		PrefixEnv:             "GITHUB",
 		Scopes:                []string{"user"},
 	}); err != nil {
@@ -115,7 +115,7 @@ func (r *Router) Init() error {
 				Db: r.Db,
 			},
 		},
-		CookieNameToken: r.cookieNameToken,
+		CookieNameToken: r.CookieNameToken,
 	}
 	receipts.Init(r.Mux)
 	payments := payments.PaymentController{
@@ -124,7 +124,7 @@ func (r *Router) Init() error {
 				Db: r.Db,
 			},
 		},
-		CookieNameToken: r.cookieNameToken,
+		CookieNameToken: r.CookieNameToken,
 	}
 	payments.Init(r.Mux)
 	users := users.UsersController{
@@ -133,7 +133,7 @@ func (r *Router) Init() error {
 				Db: r.Db,
 			},
 		},
-		CookieNameToken: r.cookieNameToken,
+		CookieNameToken: r.CookieNameToken,
 	}
 	users.Init(r.Mux)
 

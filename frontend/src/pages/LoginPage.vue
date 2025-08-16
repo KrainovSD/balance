@@ -1,15 +1,25 @@
 <script setup lang="ts">
   import { VGithubFilled, VGitlabFilled, VGoogleOutlined } from "@krainovsd/vue-icons";
   import { VButton, VText } from "@krainovsd/vue-ui";
-  import { ACTIVE_OAUTH_PROVIDERS, OAUTH_PROVIDERS } from "@/entities/tech";
+  import { ACTIVE_OAUTH_PROVIDERS, type IOauthProvider, OAUTH_PROVIDERS } from "@/entities/tech";
+  import { ENDPOINTS } from "@/api/endpoints";
   import YandexIcon from "@/components/icons/YandexIcon.vue";
+
+  function login(provider: IOauthProvider) {
+    void window.location.replace(ENDPOINTS.auth(provider));
+  }
 </script>
 
 <template>
   <div :class="$style.root">
     <VText size="lg" :strong="true" type="secondary" :class="$style.text"> Войти с помощью: </VText>
     <div :class="$style.buttonWrap">
-      <VButton v-for="provider in ACTIVE_OAUTH_PROVIDERS" :key="provider" size="large">
+      <VButton
+        v-for="provider in ACTIVE_OAUTH_PROVIDERS"
+        :key="provider"
+        size="large"
+        @click="login(provider)"
+      >
         <template #icon>
           <VGoogleOutlined v-if="provider === OAUTH_PROVIDERS.Google" :class="$style.icon" />
           <YandexIcon v-if="provider === OAUTH_PROVIDERS.Yandex" :class="$style.icon" />

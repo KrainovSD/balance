@@ -44,11 +44,13 @@ func main() {
 
 	}
 
+	var cookieNameToken = os.Getenv("AUTH_COOKIE")
 	router := routes.Router{
-		Mux:       &m,
-		Redis:     redis,
-		Db:        pg,
-		ApiClient: apiClient,
+		Mux:             &m,
+		Redis:           redis,
+		Db:              pg,
+		ApiClient:       apiClient,
+		CookieNameToken: cookieNameToken,
 	}
 	if err = router.Init(); err != nil {
 		panic(err.Error())
@@ -76,7 +78,6 @@ func main() {
 	}
 
 	var port = os.Getenv("PORT")
-	var cookieNameToken = os.Getenv("AUTH_COOKIE")
 	m.Handle("/test", oauth.AuthMiddleware(pg, cookieNameToken, false)(http.HandlerFunc(testHandle)))
 
 	fmt.Println("Starting Server on " + port)

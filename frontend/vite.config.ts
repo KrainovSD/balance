@@ -10,7 +10,7 @@ const ssr = process.env.npm_lifecycle_event === "build-ssr:js";
 const singleton = process.env.npm_lifecycle_event === "build-singleton:js";
 const production = ssr || singleton;
 
-const BALANCE_SERVICE = "http://192.168.135.150:3010"; //
+const BALANCE_SERVICE = "http://192.168.135.150:3010"; // 3010 3009
 
 export default defineConfig({
   plugins: [vue({}), vueDevTools(), presets.plugins.visualizer() as PluginOption],
