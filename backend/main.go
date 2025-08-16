@@ -44,13 +44,13 @@ func main() {
 
 	}
 
-	authRouter := routes.CreateAuthRouter(routes.Auth{
+	router := routes.Router{
 		Mux:       &m,
 		Redis:     redis,
 		Db:        pg,
 		ApiClient: apiClient,
-	})
-	if err = authRouter.Init(); err != nil {
+	}
+	if err = router.Init(); err != nil {
 		panic(err.Error())
 	}
 

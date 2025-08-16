@@ -7,7 +7,6 @@ import (
 	"finances/api"
 	"finances/lib"
 	"finances/modules/users"
-	"fmt"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -145,8 +144,6 @@ func InitGithubOauth(oauth Oauth) error {
 				return
 			}
 
-			fmt.Println(string(response.Data))
-
 			if err = json.Unmarshal(response.Data, &accessToken); err != nil {
 				lib.SendError(w, lib.ErrorResponse{
 					Message: "parse token",
@@ -170,8 +167,6 @@ func InitGithubOauth(oauth Oauth) error {
 				})
 				return
 			}
-
-			fmt.Println(string(response.Data))
 
 			if err = json.Unmarshal(response.Data, &user); err != nil {
 				lib.SendError(w, lib.ErrorResponse{

@@ -3,36 +3,30 @@ package routes
 import (
 	"database/sql"
 	"finances/api"
+	"finances/modules/payments"
+	"finances/modules/receipts"
 	"finances/oauth"
 	"finances/plugins"
 	"net/http"
-	"os"
 	"time"
 )
 
-type Auth struct {
-	Mux       *http.ServeMux
-	Redis     *plugins.RedisClient
-	Db        *sql.DB
-	ApiClient *api.ApiClient
-}
-type AuthRouter interface {
-	Init() error
+type Router struct {
+	Mux             *http.ServeMux
+	Redis           *plugins.RedisClient
+	Db              *sql.DB
+	ApiClient       *api.ApiClient
+	cookieNameToken string
 }
 
-func CreateAuthRouter(auth Auth) AuthRouter {
-	return &auth
-}
-
-func (a *Auth) Init() error {
+func (r *Router) Init() error {
 	var err error
-	var cookieNameToken = os.Getenv("AUTH_COOKIE")
 
 	if err = oauth.InitGitlabOauth(oauth.Oauth{
-		M:                     a.Mux,
-		Redis:                 a.Redis,
-		Db:                    a.Db,
-		ApiClient:             a.ApiClient,
+		M:                     r.Mux,
+		Redis:                 r.Redis,
+		Db:                    r.Db,
+		ApiClient:             r.ApiClient,
 		AuthPath:              "/api/v1/oauth/gitlab",
 		CallbackPath:          "/api/v1/oauth/gitlab/callback",
 		ServiceDataExpires:    5 * time.Minute,
@@ -41,7 +35,7 @@ func (a *Auth) Init() error {
 		CookieNameCallbackUrl: "balance.callback",
 		CookieNameComebackUrl: "balance.comeback",
 		CookieNameTimeKey:     "balance.key",
-		CookieNameToken:       cookieNameToken,
+		CookieNameToken:       r.cookieNameToken,
 		PrefixEnv:             "GITLAB",
 		Scopes:                []string{"openid", "profile", "read_user", "email"},
 	}); err != nil {
@@ -50,10 +44,10 @@ func (a *Auth) Init() error {
 	}
 
 	if err = oauth.InitGoogleOauth(oauth.Oauth{
-		M:                     a.Mux,
-		Redis:                 a.Redis,
-		Db:                    a.Db,
-		ApiClient:             a.ApiClient,
+		M:                     r.Mux,
+		Redis:                 r.Redis,
+		Db:                    r.Db,
+		ApiClient:             r.ApiClient,
 		AuthPath:              "/api/v1/oauth/google",
 		CallbackPath:          "/api/v1/oauth/google/callback",
 		ServiceDataExpires:    5 * time.Minute,
@@ -62,7 +56,7 @@ func (a *Auth) Init() error {
 		CookieNameCallbackUrl: "balance.callback",
 		CookieNameComebackUrl: "balance.comeback",
 		CookieNameTimeKey:     "balance.key",
-		CookieNameToken:       cookieNameToken,
+		CookieNameToken:       r.cookieNameToken,
 		PrefixEnv:             "GOOGLE",
 		Scopes:                []string{"openid", "profile", "email"},
 	}); err != nil {
@@ -71,10 +65,10 @@ func (a *Auth) Init() error {
 	}
 
 	if err = oauth.InitYandexOauth(oauth.Oauth{
-		M:                     a.Mux,
-		Redis:                 a.Redis,
-		Db:                    a.Db,
-		ApiClient:             a.ApiClient,
+		M:                     r.Mux,
+		Redis:                 r.Redis,
+		Db:                    r.Db,
+		ApiClient:             r.ApiClient,
 		AuthPath:              "/api/v1/oauth/yandex",
 		CallbackPath:          "/api/v1/oauth/yandex/callback",
 		ServiceDataExpires:    5 * time.Minute,
@@ -83,7 +77,7 @@ func (a *Auth) Init() error {
 		CookieNameCallbackUrl: "balance.callback",
 		CookieNameComebackUrl: "balance.comeback",
 		CookieNameTimeKey:     "balance.key",
-		CookieNameToken:       cookieNameToken,
+		CookieNameToken:       r.cookieNameToken,
 		PrefixEnv:             "YANDEX",
 		Scopes:                []string{"login:email", "login:info"},
 	}); err != nil {
@@ -91,10 +85,10 @@ func (a *Auth) Init() error {
 	}
 
 	if err = oauth.InitGithubOauth(oauth.Oauth{
-		M:                     a.Mux,
-		Redis:                 a.Redis,
-		Db:                    a.Db,
-		ApiClient:             a.ApiClient,
+		M:                     r.Mux,
+		Redis:                 r.Redis,
+		Db:                    r.Db,
+		ApiClient:             r.ApiClient,
 		AuthPath:              "/api/v1/oauth/github",
 		CallbackPath:          "/api/v1/oauth/github/callback",
 		ServiceDataExpires:    5 * time.Minute,
@@ -103,12 +97,31 @@ func (a *Auth) Init() error {
 		CookieNameCallbackUrl: "balance.callback",
 		CookieNameComebackUrl: "balance.comeback",
 		CookieNameTimeKey:     "balance.key",
-		CookieNameToken:       cookieNameToken,
+		CookieNameToken:       r.cookieNameToken,
 		PrefixEnv:             "GITHUB",
 		Scopes:                []string{"user"},
 	}); err != nil {
 		return err
 	}
+
+	receipts := receipts.ReceiptController{
+		ReceiptService: receipts.ReceiptService{
+			ReceiptProvider: receipts.ReceiptProvider{
+				Db: r.Db,
+			},
+		},
+		CookieNameToken: r.cookieNameToken,
+	}
+	receipts.Init(r.Mux)
+	payments := payments.PaymentController{
+		PaymentService: payments.PaymentService{
+			PaymentProvider: payments.PaymentProvider{
+				Db: r.Db,
+			},
+		},
+		CookieNameToken: r.cookieNameToken,
+	}
+	payments.Init(r.Mux)
 
 	return err
 }

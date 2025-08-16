@@ -12,5 +12,10 @@ type User struct {
 type UserSession struct {
 	ID        string `json:"id"`
 	ExpiresAt int    `json:"expiresAt"`
-	UserId    int    `json:"userId"`
+	UserID    int    `json:"userId"`
+}
+
+type UserProviders struct {
+	ID     string `json:"id"`
+	UserID int    `json:"userId"`
 }

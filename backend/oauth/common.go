@@ -5,7 +5,6 @@ import (
 	"errors"
 	"finances/api"
 	"finances/lib"
-	"fmt"
 	"net/http"
 	"os"
 	"strings"
@@ -170,8 +169,6 @@ func (o *Oauth) SetServiceCookie(w http.ResponseWriter, c OauthCookie) {
 	} else {
 		expires = time.Now().Add(o.ServiceDataExpires)
 	}
-
-	fmt.Println(expires, c.Clear)
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     o.CookieNameComebackUrl,
