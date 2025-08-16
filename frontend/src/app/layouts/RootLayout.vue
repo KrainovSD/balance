@@ -1,16 +1,19 @@
 <script setup lang="ts">
   import { ref } from "vue";
+  import { useRoute } from "vue-router";
+  import { PAGES } from "@/entities/tech";
   import Header from "@/components/organisms/Header/Header.vue";
   import Sidebar from "@/components/organisms/Sidebar/Sidebar.vue";
   import LoadingLayout from "./LoadingLayout.vue";
 
   const siderOpen = ref(true);
+  const route = useRoute();
 </script>
 
 <template>
-  <Header @logo="siderOpen = !siderOpen" />
+  <Header v-if="route.name === PAGES.Main" @logo="siderOpen = !siderOpen" />
   <div :class="$style.wrap">
-    <Sidebar :open="siderOpen" />
+    <Sidebar v-if="route.name === PAGES.Main" :open="siderOpen" />
     <main :class="$style.root">
       <slot></slot>
     </main>

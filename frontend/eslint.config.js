@@ -8,6 +8,7 @@ export default [
   {
     rules: {
       camelcase: "off",
+      "vue/prop-name-casing": "off",
       "max-params": ["error", 4],
     },
   },

@@ -20,3 +20,5 @@ export const ACTIVE_OAUTH_PROVIDERS: IOauthProvider[] = [
   OAUTH_PROVIDERS.Github,
   OAUTH_PROVIDERS.Gitlab,
 ];
+
+export const AUTH_CHANNEL_ID = "auth_channel";

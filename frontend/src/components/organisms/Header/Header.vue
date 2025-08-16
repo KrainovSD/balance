@@ -32,9 +32,12 @@
   <header :class="$style.root">
     <VDropDown v-if="usersStore.userInfo" :menu="userMenu">
       <UserInfo
+        tabindex="0"
+        :class="$style.user"
         :big-name="usersStore.userInfo.name"
         :tag="usersStore.userInfo.username"
         size="default"
+        @keydown="keyboardProfile"
       />
     </VDropDown>
   </header>
@@ -60,10 +63,6 @@
 
   .user {
     margin-left: auto;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-    border-radius: var(--ksd-border-radius-sm);
     cursor: pointer;
 
     &:focus-visible {

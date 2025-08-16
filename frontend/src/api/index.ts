@@ -10,16 +10,10 @@ const apiClient = createRequestClientInstance({
       },
     },
   },
-  //   activeMiddlewares: ["authNoRefresh"],
-  //   middlewareOptions: {
-  //     authNoRefresh: {
-  //       authUrl: ENDPOINTS_CONFIG.auth,
-  //       errorUrl: "/error",
-  //       storageTokenExpiresName: STORAGE_TOKEN_EXPIRES_NAME,
-  //       queryIsRefreshTokenName: QUERY_IS_REFRESH_TOKEN_NAME,
-  //       queryTokenExpiresName: QUERY_TOKEN_EXPIRES_NAME,
-  //     },
-  //   },
+  activeMiddlewares: ["oauth"],
+  middlewareOptions: {
+    oauth: {},
+  },
 });
 
 export const apiRequest = apiClient.requestApiWithMeta;

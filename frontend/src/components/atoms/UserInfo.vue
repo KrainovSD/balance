@@ -1,5 +1,6 @@
 <script setup lang="ts">
   import { VText } from "@krainovsd/vue-ui";
+  import type { HTMLAttributes } from "vue";
   import UserAvatar from "./UserAvatar.vue";
 
   type Props = {
@@ -7,7 +8,7 @@
     tag: string;
     url?: string;
     size?: "lg" | "sm" | "default";
-  };
+  } & /*@vue-ignore*/ HTMLAttributes;
 
   defineProps<Props>();
 </script>
