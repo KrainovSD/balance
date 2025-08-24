@@ -1,11 +1,14 @@
 import { extractQueries } from "@krainovsd/js-helpers";
 import { type NavigationGuardWithThis, createRouter, createWebHistory } from "vue-router";
 import LoginPage from "@/pages/LoginPage.vue";
-import MainPage from "@/pages/MainPage.vue";
+import MainPage from "@/pages/MainPage/MainPage.vue";
 import { OAUTH_REFRESH_KEY, PAGES } from "@/entities/tech";
 import { useUsersStore } from "@/entities/users";
 
 const authGuard: NavigationGuardWithThis<undefined> = async () => {
+  const queries = extractQueries();
+  if (queries[OAUTH_REFRESH_KEY] != undefined) return { name: PAGES.Login };
+
   const usersStore = useUsersStore();
 
   if (usersStore.userInfo === undefined) {

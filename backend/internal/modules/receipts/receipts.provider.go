@@ -16,7 +16,7 @@ func (r *ReceiptProvider) GetReceipts(userID int) ([]Receipt, error) {
 	var rows *sql.Rows
 
 	if rows, err = r.Db.Query(`
-		SELECT rec.id, tem.name, rec.amount, rec.date 
+		SELECT rec.id, tem.name, rec.amount, rec.date, rec.receipt_id, rec.description
 		FROM balance.receipts rec
 		LEFT JOIN balance.receipt_templates tem
 		ON rec.receipt_id = tem.id
@@ -29,7 +29,7 @@ func (r *ReceiptProvider) GetReceipts(userID int) ([]Receipt, error) {
 	receipts = make([]Receipt, 0, 10)
 	for rows.Next() {
 		receipt := Receipt{}
-		err := rows.Scan(&receipt.ID, &receipt.Name, &receipt.Amount, &receipt.Date)
+		err := rows.Scan(&receipt.ID, &receipt.Name, &receipt.Amount, &receipt.Date, &receipt.ReceiptID, &receipt.Description)
 		if err != nil {
 			return receipts, err
 		}
@@ -45,11 +45,12 @@ func (r *ReceiptProvider) UpdateReceipt(receipt ReceiptUpdateDto, receiptID int,
 	UPDATE balance.receipts
 	SET
 		receipt_id = $1,
-		amount = $2
+		amount = $2,
+		description = $3
 	WHERE
-		id = $3 AND
-		user_id = $4
-	`, receipt.ReceiptID, receipt.Amount, receiptID, userID)
+		id = $4 AND
+		user_id = $5
+	`, receipt.ReceiptID, receipt.Amount, receipt.Description, receiptID, userID)
 
 	return err
 }
@@ -58,10 +59,10 @@ func (r *ReceiptProvider) CreateReceipt(receipt ReceiptCreateDto, userID int) (i
 
 	err := r.Db.QueryRow(`
 	INSERT INTO balance.receipts 
-	(amount, receipt_id, user_id) 
-	VALUES ($1, $2, $3) 
+	(amount, receipt_id, user_id, description) 
+	VALUES ($1, $2, $3, $4) 
 	RETURNING id
-	`, receipt.Amount, receipt.ReceiptID, userID).Scan(&receiptID)
+	`, receipt.Amount, receipt.ReceiptID, userID, receipt.Description).Scan(&receiptID)
 
 	return receiptID, err
 }

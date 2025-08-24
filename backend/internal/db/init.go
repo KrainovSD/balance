@@ -76,9 +76,11 @@ func initReceipts(db *sql.DB) error {
 	CREATE TABLE IF NOT EXISTS balance.receipts (
     	id SERIAL PRIMARY KEY,
     	amount INT NOT NULL,
-    	receipt_id INT REFERENCES balance.receipt_templates(id),
+    	description VARCHAR,
+		receipt_id INT REFERENCES balance.receipt_templates(id),
     	user_id INT REFERENCES balance.users(id) ON DELETE CASCADE ON UPDATE CASCADE,
     	date TIMESTAMPTZ DEFAULT NOW()
+		
 );
 	`); err != nil {
 		return err
@@ -105,6 +107,7 @@ func initPayments(db *sql.DB) error {
 	CREATE TABLE IF NOT EXISTS balance.payments (
     	id SERIAL PRIMARY KEY,
     	amount INT NOT NULL,
+    	description VARCHAR,
     	payment_id INT REFERENCES balance.payment_templates(id),
     	user_id INT REFERENCES balance.users(id) ON DELETE CASCADE ON UPDATE CASCADE,
     	date TIMESTAMPTZ DEFAULT NOW()

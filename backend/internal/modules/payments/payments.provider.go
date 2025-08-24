@@ -16,11 +16,11 @@ func (r *PaymentProvider) GetPayments(userID int) ([]Payment, error) {
 	var rows *sql.Rows
 
 	if rows, err = r.Db.Query(`
-		SELECT rec.id, tem.name, rec.amount, rec.date 
-		FROM balance.payments rec
+		SELECT pay.id, tem.name, pay.amount, pay.date, pay.payment_id, pay.description
+		FROM balance.payments pay
 		LEFT JOIN balance.payment_templates tem
-		ON rec.payment_id = tem.id
-		WHERE rec.user_id = $1
+		ON pay.payment_id = tem.id
+		WHERE pay.user_id = $1
 
 	`, userID); err != nil {
 		return payments, err
@@ -29,7 +29,7 @@ func (r *PaymentProvider) GetPayments(userID int) ([]Payment, error) {
 	payments = make([]Payment, 0, 10)
 	for rows.Next() {
 		payment := Payment{}
-		err := rows.Scan(&payment.ID, &payment.Name, &payment.Amount, &payment.Date)
+		err := rows.Scan(&payment.ID, &payment.Name, &payment.Amount, &payment.Date, &payment.PaymentID, &payment.Description)
 		if err != nil {
 			return payments, err
 		}
@@ -45,11 +45,12 @@ func (r *PaymentProvider) UpdatePayment(payment PaymentUpdateDto, paymentID int,
 	UPDATE balance.payments
 	SET
 		payment_id = $1,
-		amount = $2
+		amount = $2,
+		description = $3
 	WHERE
-		id = $3 AND
-		user_id = $4
-	`, payment.PaymentID, payment.Amount, paymentID, userID)
+		id = $4 AND
+		user_id = $5
+	`, payment.PaymentID, payment.Amount, payment.Description, paymentID, userID)
 
 	return err
 }
@@ -58,10 +59,10 @@ func (r *PaymentProvider) CreatePayment(payment PaymentCreateDto, userID int) (i
 
 	err := r.Db.QueryRow(`
 	INSERT INTO balance.payments 
-	(amount, payment_id, user_id) 
-	VALUES ($1, $2, $3) 
+	(amount, payment_id, user_id, description) 
+	VALUES ($1, $2, $3, $4) 
 	RETURNING id
-	`, payment.Amount, payment.PaymentID, userID).Scan(&paymentID)
+	`, payment.Amount, payment.PaymentID, userID, payment.Description).Scan(&paymentID)
 
 	return paymentID, err
 }

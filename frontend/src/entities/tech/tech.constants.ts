@@ -25,3 +25,6 @@ export const AUTH_CHANNEL_ID = "auth_channel";
 
 export const OAUTH_EXPIRES_KEY = "session_token_expires";
 export const OAUTH_REFRESH_KEY = "only_refresh";
+export const REQUEST_DELAY = 2000;
+export const DATE_FORMAT = "DD.MM.YYYY";
+export const DATE_WITH_TIME_FORMAT = "DD.MM.YYYY HH:mm";

@@ -1,8 +1,30 @@
 <script setup lang="ts">
   import { VLoader } from "@krainovsd/vue-ui";
   import { computed } from "vue";
+  import { usePaymentsStore } from "@/entities/payments";
+  import { useReceiptsStore } from "@/entities/receipts";
 
-  const loading = computed(() => false);
+  const paymentsStore = usePaymentsStore();
+  const receiptsStore = useReceiptsStore();
+  const loading = computed(
+    () =>
+      paymentsStore.getPaymentTemplatesLoading ||
+      paymentsStore.createPaymentTemplatesLoading ||
+      paymentsStore.deletePaymentTemplatesLoading ||
+      paymentsStore.updatePaymentTemplatesLoading ||
+      paymentsStore.getPaymentsLoading ||
+      paymentsStore.createPaymentsLoading ||
+      paymentsStore.deletePaymentsLoading ||
+      paymentsStore.updatePaymentsLoading ||
+      receiptsStore.getReceiptTemplatesLoading ||
+      receiptsStore.createReceiptTemplatesLoading ||
+      receiptsStore.deleteReceiptTemplatesLoading ||
+      receiptsStore.updateReceiptTemplatesLoading ||
+      receiptsStore.getReceiptsLoading ||
+      receiptsStore.createReceiptsLoading ||
+      receiptsStore.deleteReceiptsLoading ||
+      receiptsStore.updateReceiptsLoading,
+  );
 </script>
 
 <template>
