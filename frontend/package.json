@@ -22,7 +22,7 @@
     "vue": "3.5.17",
     "vue-router": "4.5.1",
     "pinia": "3.0.2",
-    "@krainovsd/js-helpers": "0.15.0",
+    "@krainovsd/js-helpers": "0.15.3",
     "@krainovsd/vue-icons": "0.1.4",
     "@krainovsd/vue-ui": "0.3.0-beta.20",
     "@tanstack/vue-virtual": "3.13.12",

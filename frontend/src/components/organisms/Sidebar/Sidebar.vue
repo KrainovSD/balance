@@ -10,7 +10,6 @@
     --width-min: 53px;
     height: 100%;
     width: 310px;
-    border-right: var(--ksd-line-width) var(--ksd-line-type) var(--ksd-border-color);
     display: flex;
     flex-direction: column;
 

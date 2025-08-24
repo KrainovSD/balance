@@ -1,13 +1,38 @@
 <script setup lang="ts">
+  import { extractQueries, getOauthToken } from "@krainovsd/js-helpers";
   import { VGithubFilled, VGitlabFilled, VGoogleOutlined } from "@krainovsd/vue-icons";
   import { VButton, VText } from "@krainovsd/vue-ui";
-  import { ACTIVE_OAUTH_PROVIDERS, type IOauthProvider, OAUTH_PROVIDERS } from "@/entities/tech";
+  import { onMounted } from "vue";
+  import {
+    ACTIVE_OAUTH_PROVIDERS,
+    type IOauthProvider,
+    OAUTH_EXPIRES_KEY,
+    OAUTH_PROVIDERS,
+    OAUTH_REFRESH_KEY,
+  } from "@/entities/tech";
   import { ENDPOINTS } from "@/api/endpoints";
   import YandexIcon from "@/components/icons/YandexIcon.vue";
 
   function login(provider: IOauthProvider) {
-    void window.location.replace(ENDPOINTS.auth(provider));
+    getOauthToken({
+      expiresTokenQueryName: OAUTH_EXPIRES_KEY,
+      expiresTokenStorageName: OAUTH_EXPIRES_KEY,
+      oauthUrl: ENDPOINTS.auth(provider),
+      onlyRefreshTokenWindowQueryName: OAUTH_REFRESH_KEY,
+    });
   }
+
+  onMounted(() => {
+    const queries = extractQueries();
+    if (queries.session_token_expires) {
+      getOauthToken({
+        expiresTokenQueryName: OAUTH_EXPIRES_KEY,
+        expiresTokenStorageName: OAUTH_EXPIRES_KEY,
+        oauthUrl: "",
+        onlyRefreshTokenWindowQueryName: OAUTH_REFRESH_KEY,
+      });
+    }
+  });
 </script>
 
 <template>

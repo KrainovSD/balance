@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@krainovsd/js-helpers':
-        specifier: 0.15.0
-        version: 0.15.0
+        specifier: 0.15.3
+        version: 0.15.3
       '@krainovsd/vue-icons':
         specifier: 0.1.4
         version: 0.1.4(vue@3.5.17(typescript@5.8.3))
@@ -530,8 +530,8 @@ packages:
   '@krainovsd/js-helpers@0.14.12':
     resolution: {integrity: sha512-csk34zg71PDI3NYY4kbzl1GNk3L1gm9v8rZypsQYV4+zY+CRSmgcLfTKN0x4JBlRQmklinZ/y866wZDiEvGIgg==}
 
-  '@krainovsd/js-helpers@0.15.0':
-    resolution: {integrity: sha512-YsoV5s7gdURuMhWlVSEejA7159Vf8pwC6CXlTtkjSx7J1QmYJ4ixp3Fy98hBKSLuXUWnRoALxK8rX7Z0CK7R6g==}
+  '@krainovsd/js-helpers@0.15.3':
+    resolution: {integrity: sha512-XGit1dvm0PHV5xbi3DHInNOrqBPT/B4SZsvRELKdzkG/OgotFOk3SXc6QJCntYTVuoekhGMQq9i6yWJ+1swESA==}
 
   '@krainovsd/markdown-editor@0.4.8':
     resolution: {integrity: sha512-SbAakaloHDx07xQR1k58QBQlCwsd8Y4VfeZwmEREwHBDxUGBzbiYPf+gSw7Dtk95qM0zaOQ6w4Y3Tct5KhW8yg==}
@@ -4046,7 +4046,7 @@ snapshots:
       dayjs: 1.11.13
       lodash: 4.17.21
 
-  '@krainovsd/js-helpers@0.15.0':
+  '@krainovsd/js-helpers@0.15.3':
     dependencies:
       dayjs: 1.11.13
       lodash: 4.17.21

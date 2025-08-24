@@ -1,5 +1,16 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+  import { VButton } from "@krainovsd/vue-ui";
+  import { usePaymentsStore } from "@/entities/payments";
 
-<template>Main</template>
+  const paymentsStore = usePaymentsStore();
+
+  function test() {
+    void paymentsStore.getPaymentTemplates();
+  }
+</script>
+
+<template>
+  <VButton @click="test"> Пыщь </VButton>
+</template>
 
 <style lang="scss" module></style>
