@@ -1,9 +1,15 @@
 <script setup lang="ts">
-  import { VSettingOutlined, VUploadOutlined } from "@krainovsd/vue-icons";
-  import { type DropDownMenuItem, VDropDown } from "@krainovsd/vue-ui";
+  import { VMenuOutlined, VSettingOutlined, VUploadOutlined } from "@krainovsd/vue-icons";
+  import { type DropDownMenuItem, VButton, VDropDown } from "@krainovsd/vue-ui";
   import { computed, h, useCssModule } from "vue";
   import { useUsersStore } from "@/entities/users";
   import UserInfo from "@/components/atoms/UserInfo.vue";
+
+  type Emits = {
+    open: [];
+  };
+
+  defineEmits<Emits>();
 
   const usersStore = useUsersStore();
   const styles = useCssModule();
@@ -30,6 +36,11 @@
 
 <template>
   <header :class="$style.root">
+    <VButton :class="$style.menu" @click="$emit('open')">
+      <template #icon>
+        <VMenuOutlined />
+      </template>
+    </VButton>
     <VDropDown v-if="usersStore.userInfo" :menu="userMenu">
       <UserInfo
         tabindex="0"
@@ -47,18 +58,20 @@
   .root {
     height: 85px;
     padding: var(--ksd-padding-sm) var(--ksd-padding);
+    background-color: var(--ksd-bg-color);
     border-bottom: var(--ksd-line-width) var(--ksd-line-type) var(--ksd-border-color);
     display: flex;
     align-items: center;
     gap: var(--ksd-margin-xxl);
+    z-index: 101;
+    position: relative;
   }
 
-  .logo {
-    font-size: 45px !important;
-    padding-top: 5px !important;
-    padding-bottom: 5px !important;
-    height: fit-content !important;
-    line-height: 1 !important;
+  .menu {
+    display: none;
+    @media (width < 700px) {
+      display: inline-flex;
+    }
   }
 
   .user {

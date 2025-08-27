@@ -1,16 +1,21 @@
 <script setup lang="ts">
   import { VMinusOutlined } from "@krainovsd/vue-icons";
   import { VButton, VTooltip } from "@krainovsd/vue-ui";
-  import { computed, ref, watch } from "vue";
-  import { usePaymentsStore } from "@/entities/payments";
+  import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+  import { type IPayment, usePaymentsStore } from "@/entities/payments";
   import Payment from "./Payment.vue";
   import PaymentModal from "./PaymentModal.vue";
 
+  type Props = {
+    payments: IPayment[];
+  };
+
+  const props = defineProps<Props>();
   const paymentsStore = usePaymentsStore();
   const openPaymentModal = ref(false);
   const editedPaymentId = ref<null | number>(null);
   const editedPayment = computed(() =>
-    paymentsStore.payments.find((temp) => temp.id === editedPaymentId.value),
+    props.payments.find((temp) => temp.id === editedPaymentId.value),
   );
 
   function onPaymentAction(paymentId: number, amount: number, description: string) {
@@ -41,6 +46,25 @@
     });
   }
 
+  function onHotKeyOpen(event: KeyboardEvent) {
+    if (
+      !event.shiftKey &&
+      !event.altKey &&
+      !event.metaKey &&
+      event.ctrlKey &&
+      event.key === "Enter"
+    ) {
+      openPaymentModal.value = true;
+    }
+  }
+
+  onMounted(() => {
+    document.addEventListener("keydown", onHotKeyOpen);
+  });
+  onUnmounted(() => {
+    document.addEventListener("keydown", onHotKeyOpen);
+  });
+
   watch(
     openPaymentModal,
     (open) => {
@@ -62,22 +86,24 @@
     @delete="onPaymentDelete"
   />
 
-  <VTooltip :text="'Создать расход'">
-    <VButton
-      size="large"
-      shape="default"
-      :class="$style.button"
-      :disabled="paymentsStore.paymentTemplates.length === 0"
-      @click="openPaymentModal = true"
-      @pointerdown.stop=""
-    >
-      <template #icon>
-        <VMinusOutlined :class="$style.icon" />
-      </template>
-    </VButton>
-  </VTooltip>
+  <Teleport to="#app">
+    <VTooltip :text="'Создать расход'">
+      <VButton
+        size="large"
+        shape="default"
+        :class="$style.button"
+        :disabled="paymentsStore.paymentTemplates.length === 0"
+        @click="openPaymentModal = true"
+        @pointerdown.stop=""
+      >
+        <template #icon>
+          <VMinusOutlined :class="$style.icon" />
+        </template>
+      </VButton>
+    </VTooltip>
+  </Teleport>
   <Payment
-    v-for="payment in paymentsStore.payments"
+    v-for="payment in $props.payments"
     :key="payment.id"
     :payment="payment"
     :used="30"

@@ -6,14 +6,14 @@
   import Sidebar from "@/components/organisms/Sidebar/Sidebar.vue";
   import LoadingLayout from "./LoadingLayout.vue";
 
-  const siderOpen = ref(true);
+  const siderOpen = ref(false);
   const route = useRoute();
 </script>
 
 <template>
-  <Header v-if="route.name === PAGES.Main" @logo="siderOpen = !siderOpen" />
+  <Header v-if="route.name === PAGES.Main" @open="siderOpen = !siderOpen" />
   <div :class="$style.wrap">
-    <Sidebar v-if="route.name === PAGES.Main" :open="siderOpen" />
+    <Sidebar v-if="route.name === PAGES.Main" :open="siderOpen" @close="siderOpen = false" />
     <main :class="$style.root">
       <slot></slot>
     </main>
@@ -25,7 +25,6 @@
   .root {
     width: 100%;
     height: 100%;
-    padding: var(--ksd-padding);
     flex: 1;
     overflow: hidden;
   }

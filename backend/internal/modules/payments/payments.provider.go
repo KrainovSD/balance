@@ -21,6 +21,7 @@ func (r *PaymentProvider) GetPayments(userID int) ([]Payment, error) {
 		LEFT JOIN balance.payment_templates tem
 		ON pay.payment_id = tem.id
 		WHERE pay.user_id = $1
+		ORDER BY pay.date DESC
 
 	`, userID); err != nil {
 		return payments, err

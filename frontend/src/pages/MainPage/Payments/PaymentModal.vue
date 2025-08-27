@@ -26,7 +26,7 @@
   const emit = defineEmits<Emits>();
   const open = defineModel<boolean>();
   const body = computed(() => document.body);
-  const paymentId = ref<number | null>(null);
+  const paymentId = ref<number | null>(props.templates[0]?.id ?? null);
   const amount = ref(0);
   const description = ref("");
   const disabled = computed(() => props.loading || paymentId.value == undefined);
@@ -56,6 +56,12 @@
     }
   });
 
+  function onKeyDownAction(event: KeyboardEvent) {
+    if (event.key === "Enter" && !disabled.value && paymentId.value != undefined) {
+      emit("action", paymentId.value, amount.value, description.value);
+    }
+  }
+
   function onAction() {
     if (paymentId.value == undefined) return;
 
@@ -69,6 +75,7 @@
     :target="body"
     :header="$props.payment ? 'Изменение шаблона расходов' : 'Создание шаблона расходов'"
     :class="$style.modal"
+    :autofocus="false"
   >
     <template #content>
       <Label :label="'Шаблон'">
@@ -80,10 +87,16 @@
         />
       </Label>
       <Label :label="'Сумма'">
-        <VInputNumber v-model="amount" :disabled="$props.loading" />
+        <VInputNumber v-model="amount" :disabled="$props.loading" @keydown="onKeyDownAction" />
       </Label>
       <Label :label="'Описание'">
-        <VTextArea v-model="description" :disabled="$props.loading" :autofocus="true" />
+        <VTextArea
+          v-model="description"
+          :disabled="$props.loading"
+          :rows="8"
+          :autofocus="true"
+          @keydown="onKeyDownAction"
+        />
       </Label>
     </template>
     <template #footer>
@@ -106,6 +119,11 @@
 
 <style lang="scss" module>
   .modal {
+    width: min(95%, 600px);
+    height: min(95%, 500px);
+    max-width: 95%;
+    max-height: 95%;
+
     :global(.ksd-modal__header) {
       gap: var(--ksd-padding-sm);
     }
@@ -116,6 +134,8 @@
     }
     :global(.ksd-modal__footer) {
       justify-content: space-between;
+      margin-top: auto;
+      padding-top: var(--ksd-modal-footer-margin-top);
     }
   }
 </style>

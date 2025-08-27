@@ -21,7 +21,7 @@ func (r *ReceiptProvider) GetReceipts(userID int) ([]Receipt, error) {
 		LEFT JOIN balance.receipt_templates tem
 		ON rec.receipt_id = tem.id
 		WHERE rec.user_id = $1
-
+		ORDER BY rec.date DESC
 	`, userID); err != nil {
 		return receipts, err
 	}

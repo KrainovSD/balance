@@ -65,8 +65,8 @@ func SendError(w http.ResponseWriter, err ErrorResponse) {
 		message = err.Error.Error()
 	}
 
-	w.WriteHeader(status)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(ErrorResponse{
 		Message: message,
 		Code:    code,

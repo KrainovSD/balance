@@ -1,4 +1,6 @@
 {
   "test": true,
-  "request-delay": false
+  "request-delay": false,
+  "hidden-scroll-sidebar": true,
+  "hidden-scroll-content": true
 }

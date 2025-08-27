@@ -6,6 +6,11 @@
   import PaymentTemplate from "./PaymentTemplate.vue";
   import PaymentTemplateModal from "./PaymentTemplateModal.vue";
 
+  type Props = {
+    paymentsAmountMap: Record<string, number | undefined>;
+  };
+
+  defineProps<Props>();
   const paymentsStore = usePaymentsStore();
   const openPaymentTemplateModal = ref(false);
   const editedPaymentTemplateId = ref<null | number>(null);
@@ -63,24 +68,26 @@
     @delete="onPaymentTemplateDelete"
   />
 
-  <VTooltip :text="'Создать шаблон расхода'">
-    <VButton
-      size="large"
-      shape="default"
-      :class="$style.button"
-      @click="openPaymentTemplateModal = true"
-      @pointerdown.stop=""
-    >
-      <template #icon>
-        <TemplateMinusIcon :class="$style.icon" />
-      </template>
-    </VButton>
-  </VTooltip>
+  <Teleport to="#app">
+    <VTooltip :text="'Создать шаблон расхода'">
+      <VButton
+        size="large"
+        shape="default"
+        :class="$style.button"
+        @click="openPaymentTemplateModal = true"
+        @pointerdown.stop=""
+      >
+        <template #icon>
+          <TemplateMinusIcon :class="$style.icon" />
+        </template>
+      </VButton>
+    </VTooltip>
+  </Teleport>
   <PaymentTemplate
     v-for="template in paymentsStore.paymentTemplates"
     :key="template.id"
     :template="template"
-    :used="30"
+    :used="paymentsAmountMap[template.id] ?? 0"
     @open="
       (id) => {
         editedPaymentTemplateId = id;

@@ -71,6 +71,7 @@ export const usePaymentsStore = defineStore("payments", {
 
       if (result) {
         this.paymentTemplates = this.paymentTemplates.filter((temp) => !ids.includes(temp.id));
+        this.payments = this.payments.filter((payment) => !ids.includes(payment.paymentId));
       }
 
       this.deletePaymentTemplatesLoading = false;
@@ -111,6 +112,16 @@ export const usePaymentsStore = defineStore("payments", {
           }
 
           return temp;
+        });
+        this.payments = this.payments.map<IPayment>((pay) => {
+          if (pay.paymentId === id) {
+            return {
+              ...pay,
+              name,
+            };
+          }
+
+          return pay;
         });
       }
 
@@ -278,8 +289,8 @@ export const usePaymentsStore = defineStore("payments", {
       if (result) {
         const name = this.paymentTemplates.find((payment) => payment.id === paymentId)?.name ?? "";
         this.payments = [
-          ...this.payments,
           { amount, date: new Date().toISOString(), description, id: result.data, paymentId, name },
+          ...this.payments,
         ];
       }
 

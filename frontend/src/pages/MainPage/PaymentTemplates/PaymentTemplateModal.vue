@@ -45,21 +45,33 @@
   function onAction() {
     emit("action", name.value, amount.value);
   }
+
+  function onKeyDownAction(event: KeyboardEvent) {
+    if (event.key === "Enter" && !disabled.value) {
+      emit("action", name.value, amount.value);
+    }
+  }
 </script>
 
 <template>
   <VModal
     v-model="open"
     :target="body"
+    :autofocus="false"
     :header="$props.paymentTemplate ? 'Изменение шаблона расходов' : 'Создание шаблона расходов'"
     :class="$style.modal"
   >
     <template #content>
       <Label :label="'Название'">
-        <VInput v-model="name" :disabled="$props.loading" :autofocus="true" />
+        <VInput
+          v-model="name"
+          :disabled="$props.loading"
+          :autofocus="true"
+          @keydown="onKeyDownAction"
+        />
       </Label>
       <Label :label="'Сумма'">
-        <VInputNumber v-model="amount" :disabled="$props.loading" />
+        <VInputNumber v-model="amount" :disabled="$props.loading" @keydown="onKeyDownAction" />
       </Label>
     </template>
     <template #footer>
@@ -82,6 +94,11 @@
 
 <style lang="scss" module>
   .modal {
+    width: min(95%, 600px);
+    height: min(95%, 500px);
+    max-width: 95%;
+    max-height: 95%;
+
     :global(.ksd-modal__header) {
       gap: var(--ksd-padding-sm);
     }
@@ -92,6 +109,8 @@
     }
     :global(.ksd-modal__footer) {
       justify-content: space-between;
+      margin-top: auto;
+      padding-top: var(--ksd-modal-footer-margin-top);
     }
   }
 </style>

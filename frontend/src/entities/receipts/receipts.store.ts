@@ -71,6 +71,7 @@ export const useReceiptsStore = defineStore("receipts", {
 
       if (result) {
         this.receiptTemplates = this.receiptTemplates.filter((temp) => !ids.includes(temp.id));
+        this.receipts = this.receipts.filter((rec) => !ids.includes(rec.receiptId));
       }
 
       this.deleteReceiptTemplatesLoading = false;
@@ -99,11 +100,27 @@ export const useReceiptsStore = defineStore("receipts", {
       );
 
       if (result) {
-        const template = this.receiptTemplates.find((temp) => temp.id === id);
-        if (template) {
-          template.name = name;
-          template.amount = amount;
-        }
+        this.receiptTemplates = this.receiptTemplates.map<IReceiptTemplate>((temp) => {
+          if (temp.id === id) {
+            return {
+              amount,
+              id,
+              name,
+            };
+          }
+
+          return temp;
+        });
+        this.receipts = this.receipts.map<IReceipt>((rec) => {
+          if (rec.receiptId === id) {
+            return {
+              ...rec,
+              name,
+            };
+          }
+
+          return rec;
+        });
       }
 
       this.updateReceiptTemplatesLoading = false;
@@ -133,7 +150,7 @@ export const useReceiptsStore = defineStore("receipts", {
       );
 
       if (result) {
-        this.receiptTemplates.push({ amount, name, id: result.data });
+        this.receiptTemplates = [...this.receiptTemplates, { amount, name, id: result.data }];
       }
 
       this.createReceiptTemplatesLoading = false;
@@ -216,15 +233,23 @@ export const useReceiptsStore = defineStore("receipts", {
       );
 
       if (result) {
-        const receipt = this.receipts.find((receipt) => receipt.id === id);
-        if (receipt) {
-          const name = this.receipts.find((receipt) => receipt.id === receiptId)?.name ?? "";
+        this.receipts = this.receipts.map<IReceipt>((receipt) => {
+          if (receipt.id === id) {
+            const name =
+              this.receiptTemplates.find((temp) => temp.id === receiptId)?.name ?? receipt.name;
 
-          receipt.amount = amount;
-          receipt.name = name;
-          receipt.receiptId = receiptId;
-          receipt.description = description;
-        }
+            return {
+              id,
+              amount,
+              description,
+              receiptId,
+              date: receipt.date,
+              name,
+            };
+          }
+
+          return receipt;
+        });
       }
 
       this.updateReceiptsLoading = false;
@@ -254,16 +279,11 @@ export const useReceiptsStore = defineStore("receipts", {
       );
 
       if (result) {
-        const name = this.receipts.find((receipt) => receipt.id === receiptId)?.name ?? "";
-
-        this.receipts.push({
-          amount,
-          date: new Date().toISOString(),
-          description,
-          id: result.data,
-          receiptId,
-          name,
-        });
+        const name = this.receiptTemplates.find((receipt) => receipt.id === receiptId)?.name ?? "";
+        this.receipts = [
+          { amount, date: new Date().toISOString(), description, id: result.data, receiptId, name },
+          ...this.receipts,
+        ];
       }
 
       this.createReceiptsLoading = false;
